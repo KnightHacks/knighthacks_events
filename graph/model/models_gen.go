@@ -15,6 +15,8 @@ type Event struct {
 	Location    string    `json:"location"`
 }
 
+func (Event) IsEntity() {}
+
 type NewEvent struct {
 	Name        string    `json:"name"`
 	StartDate   time.Time `json:"start_date"`

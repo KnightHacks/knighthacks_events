@@ -1,6 +1,6 @@
 scalar Time
 
-type Event {
+type Event @key(fields: "id") {
   id: ID!
   name: String!
   start_date: Time!
