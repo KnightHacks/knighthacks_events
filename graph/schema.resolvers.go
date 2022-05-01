@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/LockedThread/events/graph/generated"
-	"github.com/LockedThread/events/graph/model"
+	"github.com/LockedThread/knighthacks_events/graph/generated"
+	"github.com/LockedThread/knighthacks_events/graph/model"
 )
 
 func (r *mutationResolver) CreateEvent(ctx context.Context, input model.NewEvent) (*model.Event, error) {
