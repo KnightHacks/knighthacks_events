@@ -24,3 +24,11 @@ type NewEvent struct {
 	Description string    `json:"description"`
 	Location    string    `json:"location"`
 }
+
+type UpdatedEvent struct {
+	Name        *string    `json:"name"`
+	StartDate   *time.Time `json:"start_date"`
+	EndDate     *time.Time `json:"end_date"`
+	Description *string    `json:"description"`
+	Location    *string    `json:"location"`
+}

@@ -15,6 +15,14 @@ func (r *mutationResolver) CreateEvent(ctx context.Context, input model.NewEvent
 	panic(fmt.Errorf("not implemented"))
 }
 
+func (r *mutationResolver) UpdateEvent(ctx context.Context, id string, input model.UpdatedEvent) (*model.Event, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
+func (r *mutationResolver) DeleteEvent(ctx context.Context, id string) (*model.Event, error) {
+	panic(fmt.Errorf("not implemented"))
+}
+
 func (r *queryResolver) Events(ctx context.Context) ([]*model.Event, error) {
 	panic(fmt.Errorf("not implemented"))
 }
