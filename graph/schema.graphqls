@@ -32,4 +32,5 @@ input UpdatedEvent {
 type Mutation {
   createEvent(input: NewEvent!): Event!
   updateEvent(id: ID!, UpdatedEvent!): Event!
+  deleteEvent(id: ID!): Event!
 }
