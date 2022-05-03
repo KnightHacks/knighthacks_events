@@ -1,4 +1,4 @@
-module github.com/LockedThread/knighthacks_events
+module github.com/KnightHacks/knighthacks_events
 
 go 1.18
 
