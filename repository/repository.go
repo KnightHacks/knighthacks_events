@@ -1,5 +1,13 @@
 package repository
 
+import (
+	"context"
+	"github.com/KnightHacks/knighthacks_events/graph/model"
+)
+
 type Repository interface {
-	// TODO: create interface functions & implement them in database_repository.go
+	CreateEvent(ctx context.Context, input *model.NewEvent) (*model.Event, error)
+	UpdateEvent(ctx context.Context, id string, input *model.UpdatedEvent) (*model.Event, error)
+	DeleteEvent(ctx context.Context, id string) (*model.Event, error)
+	GetEvent(ctx context.Context, id string) (*model.Event, error)
 }
