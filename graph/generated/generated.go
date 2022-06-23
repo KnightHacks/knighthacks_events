@@ -83,7 +83,7 @@ type EntityResolver interface {
 type MutationResolver interface {
 	CreateEvent(ctx context.Context, input model.NewEvent) (*model.Event, error)
 	UpdateEvent(ctx context.Context, id string, input model.UpdatedEvent) (*model.Event, error)
-	DeleteEvent(ctx context.Context, id string) (*model.Event, error)
+	DeleteEvent(ctx context.Context, id string) (bool, error)
 }
 type QueryResolver interface {
 	Events(ctx context.Context) ([]*model.Event, error)
@@ -331,7 +331,7 @@ input UpdatedEvent {
 type Mutation {
   createEvent(input: NewEvent!): Event!
   updateEvent(id: ID!, input: UpdatedEvent!): Event!
-  deleteEvent(id: ID!): Event!
+  deleteEvent(id: ID!): Boolean!
 }
 `, BuiltIn: false},
 	{Name: "../../federation/directives.graphql", Input: `
@@ -1005,9 +1005,9 @@ func (ec *executionContext) _Mutation_deleteEvent(ctx context.Context, field gra
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Event)
+	res := resTmp.(bool)
 	fc.Result = res
-	return ec.marshalNEvent2ᚖgithubᚗcomᚋKnightHacksᚋknighthacks_eventsᚋgraphᚋmodelᚐEvent(ctx, field.Selections, res)
+	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_deleteEvent(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -1017,21 +1017,7 @@ func (ec *executionContext) fieldContext_Mutation_deleteEvent(ctx context.Contex
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_Event_id(ctx, field)
-			case "name":
-				return ec.fieldContext_Event_name(ctx, field)
-			case "start_date":
-				return ec.fieldContext_Event_start_date(ctx, field)
-			case "end_date":
-				return ec.fieldContext_Event_end_date(ctx, field)
-			case "description":
-				return ec.fieldContext_Event_description(ctx, field)
-			case "location":
-				return ec.fieldContext_Event_location(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Event", field.Name)
+			return nil, errors.New("field of type Boolean does not have child fields")
 		},
 	}
 	defer func() {

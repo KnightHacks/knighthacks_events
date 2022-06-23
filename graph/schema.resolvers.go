@@ -19,7 +19,7 @@ func (r *mutationResolver) UpdateEvent(ctx context.Context, id string, input mod
 	return r.Repository.UpdateEvent(ctx, id, &input)
 }
 
-func (r *mutationResolver) DeleteEvent(ctx context.Context, id string) (*model.Event, error) {
+func (r *mutationResolver) DeleteEvent(ctx context.Context, id string) (bool, error) {
 	return r.Repository.DeleteEvent(ctx, id)
 }
 
