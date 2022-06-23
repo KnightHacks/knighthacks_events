@@ -32,5 +32,5 @@ input UpdatedEvent {
 type Mutation {
   createEvent(input: NewEvent!): Event!
   updateEvent(id: ID!, input: UpdatedEvent!): Event!
-  deleteEvent(id: ID!): Event!
+  deleteEvent(id: ID!): Boolean!
 }
