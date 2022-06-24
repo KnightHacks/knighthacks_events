@@ -5,10 +5,13 @@ package graph
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/KnightHacks/knighthacks_events/graph/generated"
 	"github.com/KnightHacks/knighthacks_events/graph/model"
+	"github.com/KnightHacks/knighthacks_shared/auth"
+	"github.com/KnightHacks/knighthacks_shared/models"
 )
 
 func (r *mutationResolver) CreateEvent(ctx context.Context, input model.NewEvent) (*model.Event, error) {
@@ -20,6 +23,14 @@ func (r *mutationResolver) UpdateEvent(ctx context.Context, id string, input mod
 }
 
 func (r *mutationResolver) DeleteEvent(ctx context.Context, id string) (bool, error) {
+	claims, ok := ctx.Value("AuthorizationUserClaims").(*auth.UserClaims)
+	if !ok {
+		return false, errors.New("unable to retrieve user claims, most likely forgot to set @hasRole directive")
+	}
+	if claims.Role != models.RoleAdmin {
+		return false, errors.New("unauthorized to delete event")
+	}
+
 	return r.Repository.DeleteEvent(ctx, id)
 }
 
