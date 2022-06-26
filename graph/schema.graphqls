@@ -53,7 +53,7 @@ input UpdatedEvent {
 }
 
 type Mutation {
-  createEvent(input: NewEvent!): Event!
-  updateEvent(id: ID!, input: UpdatedEvent!): Event!
-  deleteEvent(id: ID!): Boolean!
+  createEvent(input: NewEvent!): Event! @hasRole(role: ADMIN)
+  updateEvent(id: ID!, input: UpdatedEvent!): Event! @hasRole(role: ADMIN)
+  deleteEvent(id: ID!): Boolean! @hasRole(role: ADMIN)
 }

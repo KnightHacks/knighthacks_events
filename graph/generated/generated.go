@@ -355,9 +355,9 @@ input UpdatedEvent {
 }
 
 type Mutation {
-  createEvent(input: NewEvent!): Event!
-  updateEvent(id: ID!, input: UpdatedEvent!): Event!
-  deleteEvent(id: ID!): Boolean!
+  createEvent(input: NewEvent!): Event! @hasRole(role: ADMIN)
+  updateEvent(id: ID!, input: UpdatedEvent!): Event! @hasRole(role: ADMIN)
+  deleteEvent(id: ID!): Boolean! @hasRole(role: ADMIN)
 }
 `, BuiltIn: false},
 	{Name: "../../federation/directives.graphql", Input: `
@@ -910,8 +910,32 @@ func (ec *executionContext) _Mutation_createEvent(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CreateEvent(rctx, fc.Args["input"].(model.NewEvent))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CreateEvent(rctx, fc.Args["input"].(model.NewEvent))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2githubᚗcomᚋKnightHacksᚋknighthacks_sharedᚋmodelsᚐRole(ctx, "ADMIN")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Event); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KnightHacks/knighthacks_events/graph/model.Event`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -979,8 +1003,32 @@ func (ec *executionContext) _Mutation_updateEvent(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().UpdateEvent(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdatedEvent))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().UpdateEvent(rctx, fc.Args["id"].(string), fc.Args["input"].(model.UpdatedEvent))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2githubᚗcomᚋKnightHacksᚋknighthacks_sharedᚋmodelsᚐRole(ctx, "ADMIN")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Event); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/KnightHacks/knighthacks_events/graph/model.Event`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -1048,8 +1096,32 @@ func (ec *executionContext) _Mutation_deleteEvent(ctx context.Context, field gra
 		}
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().DeleteEvent(rctx, fc.Args["id"].(string))
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().DeleteEvent(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			role, err := ec.unmarshalNRole2githubᚗcomᚋKnightHacksᚋknighthacks_sharedᚋmodelsᚐRole(ctx, "ADMIN")
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, role)
+		}
+
+		tmp, err := directive1(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be bool`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
