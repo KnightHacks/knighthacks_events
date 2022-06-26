@@ -25,11 +25,6 @@ func (r *DatabaseRepository) CreateEvent(ctx context.Context, input *model.NewEv
 	panic("implement me")
 }
 
-func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *model.NewEvent) (*model.Event, error) {
-	//TODO: implement me
-	panic("implement me")
-}
-
 func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, error) {
 
 	// removes event
@@ -50,5 +45,10 @@ func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, 
 
 func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Event, error) {
 	//TODO: implement me
+	panic("implement me")
+}
+
+func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *model.UpdatedEvent) (*model.Event, error) {
+	//TODO implement me
 	panic("implement me")
 }
