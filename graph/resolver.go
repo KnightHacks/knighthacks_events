@@ -1,6 +1,9 @@
 package graph
 
-import "github.com/KnightHacks/knighthacks_events/repository"
+import (
+	"github.com/KnightHacks/knighthacks_events/repository"
+	"github.com/KnightHacks/knighthacks_shared/auth"
+)
 
 // This file will not be regenerated automatically.
 //
@@ -8,4 +11,5 @@ import "github.com/KnightHacks/knighthacks_events/repository"
 
 type Resolver struct {
 	Repository repository.Repository
+	Auth       *auth.Auth
 }

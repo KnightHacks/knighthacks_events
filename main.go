@@ -1,16 +1,14 @@
 package main
 
 import (
-	"context"
-	"errors"
-	"github.com/KnightHacks/knighthacks_events/graph/model"
 	"github.com/KnightHacks/knighthacks_events/repository"
 	"github.com/KnightHacks/knighthacks_shared/auth"
+	"github.com/KnightHacks/knighthacks_shared/database"
 	"github.com/KnightHacks/knighthacks_shared/pagination"
 	"github.com/KnightHacks/knighthacks_shared/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v4/pgxpool"
 	"log"
-	"net/http"
 	"os"
 
 	"github.com/99designs/gqlgen/graphql/handler"
@@ -27,39 +25,51 @@ func main() {
 		port = defaultPort
 	}
 
-	pool, err := pgxpool.Connect(context.Background(), utils.GetEnvOrDie("DATABASE_URI"))
+	pool, err := database.ConnectWithRetries(utils.GetEnvOrDie("DATABASE_URI"))
 	if err != nil {
 		log.Fatalf("Unable to connect to database: %v\n", err)
 	}
 
-	databaseRepository := repository.NewDatabaseRepository(pool)
+	newAuth, err := auth.NewAuthWithEnvironment()
+	if err != nil {
+		log.Fatalf("An error occured when trying to create an instance of Auth: %s\n", err)
+	}
 
-	hasRoleDirective := auth.HasRoleDirective{GetUserId: func(ctx context.Context, obj interface{}) (string, error) {
-		switch _ := obj.(type) {
-		case *model.Event:
-			// TODO: Events don't have a sense of ownership, maybe we should have events linked to their user/sponsor hosting them?
-			return "", errors.New("this shouldn't happen")
-		default:
-			// shouldn't happen, you must implement the new object with the ID field
-			return "", errors.New("this shouldn't happen")
-		}
-	}}
+	ginRouter := gin.Default()
+	ginRouter.Use(auth.AuthContextMiddleware(newAuth))
+	ginRouter.Use(utils.GinContextMiddleware())
+
+	ginRouter.POST("/query", graphqlHandler(newAuth, pool))
+	ginRouter.GET("/", playgroundHandler())
+
+	log.Fatal(ginRouter.Run(":" + port))
+}
+
+func graphqlHandler(a *auth.Auth, pool *pgxpool.Pool) gin.HandlerFunc {
+	// TODO: Sponsor doesn't have a sense of ownership, maybe we should have sponsor linked users?
+
+	hasRoleDirective := auth.HasRoleDirective{GetUserId: auth.DefaultGetUserId}
 
 	config := generated.Config{
 		Resolvers: &graph.Resolver{
-			Repository: databaseRepository,
+			Repository: repository.NewDatabaseRepository(pool),
+			Auth:       a,
 		},
 		Directives: generated.DirectiveRoot{
 			HasRole:    hasRoleDirective.Direct,
 			Pagination: pagination.Pagination,
 		},
 	}
-
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(config))
+	return func(c *gin.Context) {
+		srv.ServeHTTP(c.Writer, c.Request)
+	}
+}
 
-	http.Handle("/", playground.Handler("GraphQL playground", "/query"))
-	http.Handle("/query", srv)
+func playgroundHandler() gin.HandlerFunc {
+	h := playground.Handler("GraphQL", "/query")
 
-	log.Printf("connect to http://localhost:%s/ for GraphQL playground", port)
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	return func(c *gin.Context) {
+		h.ServeHTTP(c.Writer, c.Request)
+	}
 }
