@@ -3,9 +3,10 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/jackc/pgx/v4"
+	"time"
 
 	"github.com/KnightHacks/knighthacks_events/graph/model"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -65,7 +66,105 @@ func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Ev
 	//panic("implement me")
 }
 
+// updateevent works where it checks to see if fields are nil or empty strings then it'll call the helper functions made
 func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *model.UpdatedEvent) (*model.Event, error) {
-	//TODO implement me
-	panic("implement me")
+	var event model.Event
+	if *input.Name == "" && input.StartDate == nil && input.EndDate == nil && *input.Description == "" && *input.Location == "" {
+		return nil, errors.New("empty event field")
+	}
+	err := r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
+		if *input.Name != "" {
+			err := r.UpdateEventName(ctx, id, *input.Name, tx)
+			if err != nil {
+				return err
+			}
+			event.Name = *input.Name
+		}
+		if input.StartDate != nil {
+			err := r.UpdateStartDate(ctx, id, *input.StartDate, tx)
+			if err != nil {
+				return err
+			}
+			event.StartDate = *input.StartDate
+		}
+		if input.EndDate != nil {
+			err := r.UpdateEndDate(ctx, id, *input.EndDate, tx)
+			if err != nil {
+				return err
+			}
+			event.EndDate = *input.EndDate
+		}
+		if *input.Description != "" {
+			err := r.UpdateDescription(ctx, id, *input.Description, tx)
+			if err != nil {
+				return err
+			}
+			event.Description = *input.Description
+		}
+		if *input.Location != "" {
+			err := r.UpdateLocation(ctx, id, *input.Location, tx)
+			if err != nil {
+				return err
+			}
+			event.Location = *input.Location
+		}
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &event, nil
+}
+
+func (r *DatabaseRepository) UpdateEventName(ctx context.Context, id string, eventName string, tx pgx.Tx) error {
+	commandTag, err := tx.Exec(ctx, "UPDATE events SET name = $1 WHERE id = $2", eventName, id)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() != 1 {
+		return errors.New("event not found")
+	}
+	return nil
+}
+
+func (r *DatabaseRepository) UpdateStartDate(ctx context.Context, id string, startDate time.Time, tx pgx.Tx) error {
+	commandTag, err := tx.Exec(ctx, "UPDATE events SET start_date = $1 WHERE id = $2", startDate, id)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() != 1 {
+		return errors.New("event not found")
+	}
+	return nil
+}
+
+func (r *DatabaseRepository) UpdateEndDate(ctx context.Context, id string, endDate time.Time, tx pgx.Tx) error {
+	commandTag, err := tx.Exec(ctx, "UPDATE events SET end_date = $1 WHERE id = $2", endDate, id)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() != 1 {
+		return errors.New("event not found")
+	}
+	return nil
+}
+func (r *DatabaseRepository) UpdateDescription(ctx context.Context, id string, description string, tx pgx.Tx) error {
+	commandTag, err := tx.Exec(ctx, "UPDATE events SET description = $1 WHERE id = $2", description, id)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() != 1 {
+		return errors.New("event not found")
+	}
+	return nil
+}
+func (r *DatabaseRepository) UpdateLocation(ctx context.Context, id string, location string, tx pgx.Tx) error {
+	commandTag, err := tx.Exec(ctx, "UPDATE events SET location = $1 WHERE id = $2", location, id)
+	if err != nil {
+		return err
+	}
+	if commandTag.RowsAffected() != 1 {
+		return errors.New("event not found")
+	}
+	return nil
 }
