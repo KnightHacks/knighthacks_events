@@ -10,6 +10,10 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
+var (
+	EventNotFound = errors.New("event was not found")
+)
+
 //DatabaseRepository
 //Implements the Repository interface's functions
 type DatabaseRepository struct {
@@ -38,7 +42,7 @@ func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, 
 	}
 	// checking to see if there is 1 row affected for deleted events if not there is an issue
 	if commandTag.RowsAffected() != 1 {
-		return false, errors.New("event was not found")
+		return false, EventNotFound
 	}
 
 	// if the above conditions dont execute everything is good
@@ -122,7 +126,7 @@ func (r *DatabaseRepository) UpdateEventName(ctx context.Context, id string, eve
 		return err
 	}
 	if commandTag.RowsAffected() != 1 {
-		return errors.New("event not found")
+		return EventNotFound
 	}
 	return nil
 }
@@ -133,7 +137,7 @@ func (r *DatabaseRepository) UpdateStartDate(ctx context.Context, id string, sta
 		return err
 	}
 	if commandTag.RowsAffected() != 1 {
-		return errors.New("event not found")
+		return EventNotFound
 	}
 	return nil
 }
@@ -144,7 +148,7 @@ func (r *DatabaseRepository) UpdateEndDate(ctx context.Context, id string, endDa
 		return err
 	}
 	if commandTag.RowsAffected() != 1 {
-		return errors.New("event not found")
+		return EventNotFound
 	}
 	return nil
 }
@@ -154,7 +158,7 @@ func (r *DatabaseRepository) UpdateDescription(ctx context.Context, id string, d
 		return err
 	}
 	if commandTag.RowsAffected() != 1 {
-		return errors.New("event not found")
+		return EventNotFound
 	}
 	return nil
 }
@@ -164,7 +168,7 @@ func (r *DatabaseRepository) UpdateLocation(ctx context.Context, id string, loca
 		return err
 	}
 	if commandTag.RowsAffected() != 1 {
-		return errors.New("event not found")
+		return EventNotFound
 	}
 	return nil
 }
