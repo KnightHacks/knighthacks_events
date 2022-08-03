@@ -5,14 +5,13 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/KnightHacks/knighthacks_events/graph/generated"
 	"github.com/KnightHacks/knighthacks_events/graph/model"
 )
 
 func (r *entityResolver) FindEventByID(ctx context.Context, id string) (*model.Event, error) {
-	panic(fmt.Errorf("not implemented"))
+	return r.Repository.GetEvent(ctx, id)
 }
 
 // Entity returns generated.EntityResolver implementation.
