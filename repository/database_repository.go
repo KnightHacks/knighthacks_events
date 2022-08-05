@@ -14,8 +14,8 @@ var (
 	EventNotFound = errors.New("event was not found")
 )
 
-//DatabaseRepository
-//Implements the Repository interface's functions
+// DatabaseRepository
+// Implements the Repository interface's functions
 type DatabaseRepository struct {
 	DatabasePool *pgxpool.Pool
 }
@@ -50,7 +50,6 @@ func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, 
 }
 
 func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Event, error) {
-
 	var event model.Event
 	err := r.DatabasePool.QueryRow(ctx, "SELECT id, location, start_date, end_date, name, description FROM events WHERE id = $1", id).Scan(&event.ID, &event.Location,
 		&event.StartDate, &event.EndDate, &event.Name, &event.Description)
@@ -65,12 +64,9 @@ func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Ev
 	}
 
 	return &event, err
-
-	//TODO: implement me
-	//panic("implement me")
 }
 
-// updateevent works where it checks to see if fields are nil or empty strings then it'll call the helper functions made
+// UpdateEvent works where it checks to see if fields are nil or empty strings then it'll call the helper functions made
 func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *model.UpdatedEvent) (*model.Event, error) {
 	var event model.Event
 	if *input.Name == "" && input.StartDate == nil && input.EndDate == nil && *input.Description == "" && *input.Location == "" {
