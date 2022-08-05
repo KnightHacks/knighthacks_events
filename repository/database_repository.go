@@ -69,11 +69,11 @@ func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Ev
 // UpdateEvent works where it checks to see if fields are nil or empty strings then it'll call the helper functions made
 func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *model.UpdatedEvent) (*model.Event, error) {
 	var event model.Event
-	if *input.Name == "" && input.StartDate == nil && input.EndDate == nil && *input.Description == "" && *input.Location == "" {
+	if input.Name != nil && input.StartDate == nil && input.EndDate == nil && input.Description != nil && input.Location != nil {
 		return nil, errors.New("empty event field")
 	}
 	err := r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
-		if *input.Name != "" {
+		if input.Name != nil {
 			err := r.UpdateEventName(ctx, id, *input.Name, tx)
 			if err != nil {
 				return err
@@ -94,14 +94,14 @@ func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *
 			}
 			event.EndDate = *input.EndDate
 		}
-		if *input.Description != "" {
+		if input.Description != nil {
 			err := r.UpdateDescription(ctx, id, *input.Description, tx)
 			if err != nil {
 				return err
 			}
 			event.Description = *input.Description
 		}
-		if *input.Location != "" {
+		if input.Location != nil {
 			err := r.UpdateLocation(ctx, id, *input.Location, tx)
 			if err != nil {
 				return err
