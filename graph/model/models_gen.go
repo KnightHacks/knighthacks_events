@@ -4,7 +4,13 @@ package model
 
 import (
 	"time"
+
+	"github.com/KnightHacks/knighthacks_shared/models"
 )
+
+type Connection interface {
+	IsConnection()
+}
 
 type Event struct {
 	ID          string    `json:"id"`
@@ -16,6 +22,14 @@ type Event struct {
 }
 
 func (Event) IsEntity() {}
+
+type EventsConnection struct {
+	TotalCount int              `json:"totalCount"`
+	PageInfo   *models.PageInfo `json:"pageInfo"`
+	Events     []*Event         `json:"events"`
+}
+
+func (EventsConnection) IsConnection() {}
 
 type NewEvent struct {
 	Name        string    `json:"name"`

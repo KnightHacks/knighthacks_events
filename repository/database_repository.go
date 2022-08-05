@@ -168,3 +168,31 @@ func (r *DatabaseRepository) UpdateLocation(ctx context.Context, id string, loca
 	}
 	return nil
 }
+
+func (r *DatabaseRepository) GetEvents(ctx context.Context, first int, after string) ([]*model.Event, int, error) {
+	events := make([]*model.Event, 0, first)
+	var total int
+	err := r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
+		rows, err := r.DatabasePool.Query(ctx, "SELECT id, location, start_date, end_date, name, description FROM events WHERE id > $1 ORDER BY `id` DESC LIMIT $2", after, first)
+		if err != nil {
+			return err
+		}
+
+		for rows.Next() {
+			var event model.Event
+
+			if err = rows.Scan(&event.ID, &event.Location, &event.StartDate, &event.EndDate, &event.Name, &event.Description); err != nil {
+				return err
+			}
+			events = append(events, &event)
+		}
+
+		return r.DatabasePool.QueryRow(ctx, "SELECT COUNT(*) FROM events").Scan(&total)
+	})
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return events, total, nil
+}
