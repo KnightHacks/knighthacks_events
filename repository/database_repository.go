@@ -3,15 +3,17 @@ package repository
 import (
 	"context"
 	"errors"
+	"github.com/jackc/pgx/v4"
+	"strconv"
 	"time"
 
 	"github.com/KnightHacks/knighthacks_events/graph/model"
-	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
 var (
-	EventNotFound = errors.New("event was not found")
+	EventAlreadyExists = errors.New("event with id already exists")
+	EventNotFound      = errors.New("event was not found")
 )
 
 // DatabaseRepository
@@ -26,9 +28,74 @@ func NewDatabaseRepository(databasePool *pgxpool.Pool) *DatabaseRepository {
 	}
 }
 
+/*
+create table events
+(
+    id           serial,
+    hackathon_id integer   not null,
+    location     varchar   not null,
+    start_date   timestamp not null,
+    end_date     timestamp not null,
+    name         varchar   not null,
+    description  varchar   not null,
+    constraint events_pk
+        primary key (id),
+    constraint events_hackathons_id_fk
+        foreign key (hackathon_id) references hackathons
+);
+*/
 func (r *DatabaseRepository) CreateEvent(ctx context.Context, input *model.NewEvent) (*model.Event, error) {
 	//TODO: implement me
-	panic("implement me")
+	var eventId string
+	eventName := input.Name
+	eventDescription := input.Description
+	eventLocation := input.Location
+	startDate := input.StartDate
+	endDate := input.EndDate
+
+	err := r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
+		var discoveredEventID = new(int)
+		//Okay, thinking about it it's possible that multiple events could have the same name at the same day.
+		//Like HACKATHONA starts from 12:00 PM - 2:00 PM and then HACKATHONA has another event from 5:00 PM - 7:00 PM, but it's happening at some other location does something else
+		//The real issue would be if you somehow try to make the same event on the same day twice.
+		err := tx.QueryRow(ctx, "SELECT ID FROM events WHERE(NAME = $1) AND (START_DATE <= $3 AND END_DATE >= $2) AND (LOCATION = $4) LIMIT 1", eventName, startDate, endDate, eventLocation).Scan(&discoveredEventID)
+		if err == nil && discoveredEventID != nil {
+			return EventAlreadyExists
+		}
+
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return err
+		}
+
+		var eventIdInt int
+		//Not sure what happens with the hackathonid.
+		err = tx.QueryRow(ctx, "INSERT INTO EVENTS (NAME,DESCRIPTION,START_DATE,END_DATE,LOCATION) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+			eventName,
+			eventDescription,
+			startDate,
+			endDate,
+			eventLocation).Scan(&eventIdInt)
+
+		if err != nil {
+			return err
+		}
+		eventId = strconv.Itoa(eventIdInt)
+		return nil
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	//Hackathon id?
+	return &model.Event{
+		ID:          eventId,
+		Location:    eventLocation,
+		StartDate:   startDate,
+		EndDate:     endDate,
+		Name:        eventName,
+		Description: eventDescription,
+	}, nil
 }
 
 func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, error) {
