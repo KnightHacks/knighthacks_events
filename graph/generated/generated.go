@@ -344,6 +344,7 @@ input NewEvent {
   end_date: Time!
   description: String!
   location: String!
+  hackathon_id: ID!
 }
 
 input UpdatedEvent {
@@ -3312,6 +3313,14 @@ func (ec *executionContext) unmarshalInputNewEvent(ctx context.Context, obj inte
 
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("location"))
 			it.Location, err = ec.unmarshalNString2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+		case "hackathon_id":
+			var err error
+
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hackathon_id"))
+			it.HackathonID, err = ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
 			}

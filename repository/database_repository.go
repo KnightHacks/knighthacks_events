@@ -31,17 +31,19 @@ func NewDatabaseRepository(databasePool *pgxpool.Pool) *DatabaseRepository {
 /*
 create table events
 (
-    id           serial,
-    hackathon_id integer   not null,
-    location     varchar   not null,
-    start_date   timestamp not null,
-    end_date     timestamp not null,
-    name         varchar   not null,
-    description  varchar   not null,
-    constraint events_pk
-        primary key (id),
-    constraint events_hackathons_id_fk
-        foreign key (hackathon_id) references hackathons
+
+	id           serial,
+	hackathon_id integer   not null,
+	location     varchar   not null,
+	start_date   timestamp not null,
+	end_date     timestamp not null,
+	name         varchar   not null,
+	description  varchar   not null,
+	constraint events_pk
+	    primary key (id),
+	constraint events_hackathons_id_fk
+	    foreign key (hackathon_id) references hackathons
+
 );
 */
 func (r *DatabaseRepository) CreateEvent(ctx context.Context, input *model.NewEvent) (*model.Event, error) {
@@ -58,7 +60,7 @@ func (r *DatabaseRepository) CreateEvent(ctx context.Context, input *model.NewEv
 		//Okay, thinking about it it's possible that multiple events could have the same name at the same day.
 		//Like HACKATHONA starts from 12:00 PM - 2:00 PM and then HACKATHONA has another event from 5:00 PM - 7:00 PM, but it's happening at some other location does something else
 		//The real issue would be if you somehow try to make the same event on the same day twice.
-		err := tx.QueryRow(ctx, "SELECT ID FROM events WHERE(NAME = $1) AND (START_DATE <= $3 AND END_DATE >= $2) AND (LOCATION = $4) LIMIT 1", eventName, startDate, endDate, eventLocation).Scan(&discoveredEventID)
+		err := tx.QueryRow(ctx, "SELECT id FROM events WHERE(name = $1) AND (start_date <= $3 AND end_date >= $2) AND (location = $4) AND (hackathon_id != $5) LIMIT 1", eventName, startDate, endDate, eventLocation, input.HackathonID).Scan(discoveredEventID)
 		if err == nil && discoveredEventID != nil {
 			return EventAlreadyExists
 		}
@@ -69,12 +71,13 @@ func (r *DatabaseRepository) CreateEvent(ctx context.Context, input *model.NewEv
 
 		var eventIdInt int
 		//Not sure what happens with the hackathonid.
-		err = tx.QueryRow(ctx, "INSERT INTO EVENTS (NAME,DESCRIPTION,START_DATE,END_DATE,LOCATION) VALUES ($1, $2, $3, $4, $5) RETURNING id",
+		err = tx.QueryRow(ctx, "INSERT INTO events (name,description,start_date,end_date,location,hackathon_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
 			eventName,
 			eventDescription,
 			startDate,
 			endDate,
-			eventLocation).Scan(&eventIdInt)
+			eventLocation,
+			input.HackathonID).Scan(&eventIdInt)
 
 		if err != nil {
 			return err
