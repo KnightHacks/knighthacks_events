@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"errors"
+	"github.com/KnightHacks/knighthacks_shared/database"
 	"time"
 
 	"github.com/KnightHacks/knighthacks_events/graph/model"
@@ -50,8 +51,12 @@ func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, 
 }
 
 func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Event, error) {
+	return r.getEventWithQueryable(ctx, id, r.DatabasePool)
+}
+
+func (r *DatabaseRepository) getEventWithQueryable(ctx context.Context, id string, queryable database.Queryable) (*model.Event, error) {
 	var event model.Event
-	err := r.DatabasePool.QueryRow(ctx, "SELECT id, location, start_date, end_date, name, description FROM events WHERE id = $1", id).Scan(&event.ID, &event.Location,
+	err := queryable.QueryRow(ctx, "SELECT id, location, start_date, end_date, name, description FROM events WHERE id = $1", id).Scan(&event.ID, &event.Location,
 		&event.StartDate, &event.EndDate, &event.Name, &event.Description)
 
 	if err != nil {
@@ -66,52 +71,52 @@ func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Ev
 
 // UpdateEvent works where it checks to see if fields are nil or empty strings then it'll call the helper functions made
 func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *model.UpdatedEvent) (*model.Event, error) {
-	var event model.Event
 	if input.Name == nil && input.StartDate == nil && input.EndDate == nil && input.Description == nil && input.Location == nil {
 		return nil, errors.New("empty event field")
 	}
-	err := r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
+	var event *model.Event
+	var err error
+	err = r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
 		if input.Name != nil {
-			err := r.UpdateEventName(ctx, id, *input.Name, tx)
+			err = r.UpdateEventName(ctx, id, *input.Name, tx)
 			if err != nil {
 				return err
 			}
-			event.Name = *input.Name
 		}
 		if input.StartDate != nil {
-			err := r.UpdateStartDate(ctx, id, *input.StartDate, tx)
+			err = r.UpdateStartDate(ctx, id, *input.StartDate, tx)
 			if err != nil {
 				return err
 			}
-			event.StartDate = *input.StartDate
 		}
 		if input.EndDate != nil {
-			err := r.UpdateEndDate(ctx, id, *input.EndDate, tx)
+			err = r.UpdateEndDate(ctx, id, *input.EndDate, tx)
 			if err != nil {
 				return err
 			}
-			event.EndDate = *input.EndDate
 		}
 		if input.Description != nil {
 			err := r.UpdateDescription(ctx, id, *input.Description, tx)
 			if err != nil {
 				return err
 			}
-			event.Description = *input.Description
 		}
 		if input.Location != nil {
 			err := r.UpdateLocation(ctx, id, *input.Location, tx)
 			if err != nil {
 				return err
 			}
-			event.Location = *input.Location
+		}
+		event, err = r.getEventWithQueryable(ctx, id, tx)
+		if err != nil {
+			return err
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-	return &event, nil
+	return event, nil
 }
 
 func (r *DatabaseRepository) UpdateEventName(ctx context.Context, id string, eventName string, tx pgx.Tx) error {
