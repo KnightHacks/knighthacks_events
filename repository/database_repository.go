@@ -55,11 +55,9 @@ func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Ev
 		&event.StartDate, &event.EndDate, &event.Name, &event.Description)
 
 	if err != nil {
-
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil
+			return nil, EventNotFound
 		}
-
 		return nil, err
 	}
 
