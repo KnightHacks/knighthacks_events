@@ -5,7 +5,7 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	"github.com/KnightHacks/knighthacks_shared/pagination"
 
 	"github.com/KnightHacks/knighthacks_events/graph/generated"
 	"github.com/KnightHacks/knighthacks_events/graph/model"
@@ -19,12 +19,25 @@ func (r *mutationResolver) UpdateEvent(ctx context.Context, id string, input mod
 	return r.Repository.UpdateEvent(ctx, id, &input)
 }
 
-func (r *mutationResolver) DeleteEvent(ctx context.Context, id string) (*model.Event, error) {
+func (r *mutationResolver) DeleteEvent(ctx context.Context, id string) (bool, error) {
 	return r.Repository.DeleteEvent(ctx, id)
 }
 
-func (r *queryResolver) Events(ctx context.Context) ([]*model.Event, error) {
-	panic(fmt.Errorf("not implemented"))
+func (r *queryResolver) Events(ctx context.Context, first int, after *string) (*model.EventsConnection, error) {
+	a, err := pagination.DecodeCursor(after)
+	if err != nil {
+		return nil, err
+	}
+	events, total, err := r.Repository.GetEvents(ctx, first, a)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.EventsConnection{
+		TotalCount: total,
+		PageInfo:   pagination.GetPageInfo(events[0].ID, events[len(events)-1].ID),
+		Events:     events,
+	}, nil
 }
 
 // Mutation returns generated.MutationResolver implementation.

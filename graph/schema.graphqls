@@ -1,5 +1,50 @@
 scalar Time
 
+directive @goModel(model: String, models: [String!]) on OBJECT
+    | INPUT_OBJECT
+    | SCALAR
+    | ENUM
+    | INTERFACE
+    | UNION
+
+directive @goField(forceResolver: Boolean, name: String) on INPUT_FIELD_DEFINITION
+    | FIELD_DEFINITION
+
+directive @hasRole(role: Role!) on FIELD_DEFINITION | OBJECT # set minimum layer of security
+directive @pagination(maxLength: Int!) on FIELD_DEFINITION
+
+interface Connection {
+    # The total number of entries
+    totalCount: Int
+    # Information for paginating this connection
+    pageInfo: PageInfo!
+}
+
+type PageInfo @goModel(model: "github.com/KnightHacks/knighthacks_shared/models.PageInfo") {
+    # the first entry
+    startCursor: String!
+    # the last entry
+    endCursor: String!
+}
+
+# A connection object for a list of users
+type EventsConnection implements Connection {
+    totalCount: Int!
+    pageInfo: PageInfo!
+
+    events: [Event!]!
+}
+
+enum Role @goModel(model: "github.com/KnightHacks/knighthacks_shared/models.Role") {
+    ADMIN
+    """
+    for now keep this the same
+    """
+    SPONSOR
+    NORMAL
+    OWNS
+}
+
 type Event @key(fields: "id") {
   id: ID!
   name: String!
@@ -10,7 +55,7 @@ type Event @key(fields: "id") {
 }
 
 type Query {
-  events: [Event!]!
+  events(first: Int!, after: ID): EventsConnection!
 }
 
 input NewEvent {
@@ -30,7 +75,7 @@ input UpdatedEvent {
 }
 
 type Mutation {
-  createEvent(input: NewEvent!): Event!
-  updateEvent(id: ID!, input: UpdatedEvent!): Event!
-  deleteEvent(id: ID!): Event!
+  createEvent(input: NewEvent!): Event! @hasRole(role: ADMIN)
+  updateEvent(id: ID!, input: UpdatedEvent!): Event! @hasRole(role: ADMIN)
+  deleteEvent(id: ID!): Boolean! @hasRole(role: ADMIN)
 }
