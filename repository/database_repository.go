@@ -3,10 +3,8 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/jackc/pgx/v4"
-	"strconv"
 	"time"
-
+	"github.com/jackc/pgx/v4"
 	"github.com/KnightHacks/knighthacks_events/graph/model"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
@@ -31,7 +29,6 @@ func NewDatabaseRepository(databasePool *pgxpool.Pool) *DatabaseRepository {
 /*
 create table events
 (
-
 	id           serial,
 	hackathon_id integer   not null,
 	location     varchar   not null,
@@ -43,49 +40,25 @@ create table events
 	    primary key (id),
 	constraint events_hackathons_id_fk
 	    foreign key (hackathon_id) references hackathons
-
 );
 */
 func (r *DatabaseRepository) CreateEvent(ctx context.Context, input *model.NewEvent) (*model.Event, error) {
-	//TODO: implement me
 	var eventId string
+	hackathonId := input.HackathonID
 	eventName := input.Name
 	eventDescription := input.Description
 	eventLocation := input.Location
 	startDate := input.StartDate
 	endDate := input.EndDate
 
-	err := r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
-		var discoveredEventID = new(int)
-		//Okay, thinking about it it's possible that multiple events could have the same name at the same day.
-		//Like HACKATHONA starts from 12:00 PM - 2:00 PM and then HACKATHONA has another event from 5:00 PM - 7:00 PM, but it's happening at some other location does something else
-		//The real issue would be if you somehow try to make the same event on the same day twice.
-		err := tx.QueryRow(ctx, "SELECT id FROM events WHERE(name = $1) AND (start_date <= $3 AND end_date >= $2) AND (location = $4) AND (hackathon_id != $5) LIMIT 1", eventName, startDate, endDate, eventLocation, input.HackathonID).Scan(discoveredEventID)
-		if err == nil && discoveredEventID != nil {
-			return EventAlreadyExists
-		}
-
-		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-			return err
-		}
-
-		var eventIdInt int
-		//Not sure what happens with the hackathonid.
-		err = tx.QueryRow(ctx, "INSERT INTO events (name,description,start_date,end_date,location,hackathon_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-			eventName,
-			eventDescription,
-			startDate,
-			endDate,
-			eventLocation,
-			input.HackathonID).Scan(&eventIdInt)
-
-		if err != nil {
-			return err
-		}
-		eventId = strconv.Itoa(eventIdInt)
-		return nil
-	})
-
+	err := r.DatabasePool.QueryRow(ctx, "INSERT INTO events (hackathon_id, location, start_date, end_date, name, description) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+		hackathonId,
+		eventLocation,
+		startDate,
+		endDate,
+		eventName,
+		eventDescription,
+	).Scan(&eventId)
 	if err != nil {
 		return nil, err
 	}
