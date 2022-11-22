@@ -23,7 +23,7 @@ type NewEvent struct {
 	EndDate     time.Time `json:"end_date"`
 	Description string    `json:"description"`
 	Location    string    `json:"location"`
-	HackathonID string    `json:"hackathon_id"`
+	HackathonID string    `json:"hackathonId"`
 }
 
 type UpdatedEvent struct {

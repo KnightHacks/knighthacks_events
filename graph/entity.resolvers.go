@@ -10,6 +10,7 @@ import (
 	"github.com/KnightHacks/knighthacks_events/graph/model"
 )
 
+// FindEventByID is the resolver for the findEventByID field.
 func (r *entityResolver) FindEventByID(ctx context.Context, id string) (*model.Event, error) {
 	return r.Repository.GetEvent(ctx, id)
 }

@@ -344,7 +344,7 @@ input NewEvent {
   end_date: Time!
   description: String!
   location: String!
-  hackathon_id: ID!
+  hackathonId: ID!
 }
 
 input UpdatedEvent {
@@ -364,7 +364,7 @@ type Mutation {
 	{Name: "../../federation/directives.graphql", Input: `
 	scalar _Any
 	scalar _FieldSet
-	
+
 	directive @external on FIELD_DEFINITION
 	directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
 	directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
@@ -3274,7 +3274,12 @@ func (ec *executionContext) unmarshalInputNewEvent(ctx context.Context, obj inte
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"name", "start_date", "end_date", "description", "location", "hackathonId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "name":
 			var err error
@@ -3316,10 +3321,10 @@ func (ec *executionContext) unmarshalInputNewEvent(ctx context.Context, obj inte
 			if err != nil {
 				return it, err
 			}
-		case "hackathon_id":
+		case "hackathonId":
 			var err error
 
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hackathon_id"))
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("hackathonId"))
 			it.HackathonID, err = ec.unmarshalNID2string(ctx, v)
 			if err != nil {
 				return it, err
@@ -3337,7 +3342,12 @@ func (ec *executionContext) unmarshalInputUpdatedEvent(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	for k, v := range asMap {
+	fieldsInOrder := [...]string{"name", "start_date", "end_date", "description", "location"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
 		switch k {
 		case "name":
 			var err error
