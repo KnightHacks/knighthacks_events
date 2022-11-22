@@ -3,12 +3,13 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/KnightHacks/knighthacks_shared/database"
 	"time"
 
+	"github.com/KnightHacks/knighthacks_shared/database"
+
 	"github.com/KnightHacks/knighthacks_events/graph/model"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
@@ -76,7 +77,7 @@ func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *
 	}
 	var event *model.Event
 	var err error
-	err = r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
+	err = pgx.BeginTxFunc(ctx, r.DatabasePool, pgx.TxOptions{}, func(tx pgx.Tx) error {
 		if input.Name != nil {
 			err = r.UpdateEventName(ctx, id, *input.Name, tx)
 			if err != nil {
@@ -175,7 +176,7 @@ func (r *DatabaseRepository) UpdateLocation(ctx context.Context, id string, loca
 func (r *DatabaseRepository) GetEvents(ctx context.Context, first int, after string) ([]*model.Event, int, error) {
 	events := make([]*model.Event, 0, first)
 	var total int
-	err := r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
+	err := pgx.BeginTxFunc(ctx, r.DatabasePool, pgx.TxOptions{}, func(tx pgx.Tx) error {
 		rows, err := r.DatabasePool.Query(ctx, "SELECT id, location, start_date, end_date, name, description FROM events WHERE id > $1 ORDER BY `id` DESC LIMIT $2", after, first)
 		if err != nil {
 			return err
