@@ -3,10 +3,11 @@ package repository
 import (
 	"context"
 	"errors"
-	"time"
-	"github.com/jackc/pgx/v4"
 	"github.com/KnightHacks/knighthacks_events/graph/model"
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
+	"strconv"
+	"time"
 )
 
 var (
@@ -29,6 +30,7 @@ func NewDatabaseRepository(databasePool *pgxpool.Pool) *DatabaseRepository {
 /*
 create table events
 (
+
 	id           serial,
 	hackathon_id integer   not null,
 	location     varchar   not null,
@@ -40,37 +42,30 @@ create table events
 	    primary key (id),
 	constraint events_hackathons_id_fk
 	    foreign key (hackathon_id) references hackathons
+
 );
 */
 func (r *DatabaseRepository) CreateEvent(ctx context.Context, input *model.NewEvent) (*model.Event, error) {
-	var eventId string
-	hackathonId := input.HackathonID
-	eventName := input.Name
-	eventDescription := input.Description
-	eventLocation := input.Location
-	startDate := input.StartDate
-	endDate := input.EndDate
-
+	var eventIdInt int
 	err := r.DatabasePool.QueryRow(ctx, "INSERT INTO events (hackathon_id, location, start_date, end_date, name, description) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
-		hackathonId,
-		eventLocation,
-		startDate,
-		endDate,
-		eventName,
-		eventDescription,
-	).Scan(&eventId)
+		input.HackathonID,
+		input.Location,
+		input.StartDate,
+		input.EndDate,
+		input.Name,
+		input.Description,
+	).Scan(&eventIdInt)
 	if err != nil {
 		return nil, err
 	}
 
-	//Hackathon id?
 	return &model.Event{
-		ID:          eventId,
-		Location:    eventLocation,
-		StartDate:   startDate,
-		EndDate:     endDate,
-		Name:        eventName,
-		Description: eventDescription,
+		ID:          strconv.Itoa(eventIdInt),
+		Location:    input.Location,
+		StartDate:   input.StartDate,
+		EndDate:     input.EndDate,
+		Name:        input.Name,
+		Description: input.Description,
 	}, nil
 }
 
