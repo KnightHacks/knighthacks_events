@@ -3,17 +3,17 @@ package repository
 import (
 	"context"
 	"errors"
+	"strconv"
 	"time"
-
 	"github.com/KnightHacks/knighthacks_shared/database"
-
 	"github.com/KnightHacks/knighthacks_events/graph/model"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var (
-	EventNotFound = errors.New("event was not found")
+	EventAlreadyExists = errors.New("event with id already exists")
+	EventNotFound      = errors.New("event was not found")
 )
 
 // DatabaseRepository
@@ -28,9 +28,46 @@ func NewDatabaseRepository(databasePool *pgxpool.Pool) *DatabaseRepository {
 	}
 }
 
+/*
+create table events
+(
+
+	id           serial,
+	hackathon_id integer   not null,
+	location     varchar   not null,
+	start_date   timestamp not null,
+	end_date     timestamp not null,
+	name         varchar   not null,
+	description  varchar   not null,
+	constraint events_pk
+	    primary key (id),
+	constraint events_hackathons_id_fk
+	    foreign key (hackathon_id) references hackathons
+
+);
+*/
 func (r *DatabaseRepository) CreateEvent(ctx context.Context, input *model.NewEvent) (*model.Event, error) {
-	//TODO: implement me
-	panic("implement me")
+	var eventIdInt int
+	err := r.DatabasePool.QueryRow(ctx, "INSERT INTO events (hackathon_id, location, start_date, end_date, name, description) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+		input.HackathonID,
+		input.Location,
+		input.StartDate,
+		input.EndDate,
+		input.Name,
+		input.Description,
+	).Scan(&eventIdInt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Event{
+		ID:          strconv.Itoa(eventIdInt),
+		Location:    input.Location,
+		StartDate:   input.StartDate,
+		EndDate:     input.EndDate,
+		Name:        input.Name,
+		Description: input.Description,
+	}, nil
 }
 
 func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, error) {
