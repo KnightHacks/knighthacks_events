@@ -3,12 +3,12 @@ package repository
 import (
 	"context"
 	"errors"
-	"strconv"
-	"time"
-	"github.com/KnightHacks/knighthacks_shared/database"
 	"github.com/KnightHacks/knighthacks_events/graph/model"
+	"github.com/KnightHacks/knighthacks_shared/database"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"strconv"
+	"time"
 )
 
 var (
@@ -89,10 +89,10 @@ func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, 
 }
 
 func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Event, error) {
-	return r.getEventWithQueryable(ctx, id, r.DatabasePool)
+	return r.GetEventWithQueryable(ctx, id, r.DatabasePool)
 }
 
-func (r *DatabaseRepository) getEventWithQueryable(ctx context.Context, id string, queryable database.Queryable) (*model.Event, error) {
+func (r *DatabaseRepository) GetEventWithQueryable(ctx context.Context, id string, queryable database.Queryable) (*model.Event, error) {
 	var event model.Event
 	err := queryable.QueryRow(ctx, "SELECT id, location, start_date, end_date, name, description FROM events WHERE id = $1", id).Scan(&event.ID, &event.Location,
 		&event.StartDate, &event.EndDate, &event.Name, &event.Description)
@@ -145,7 +145,7 @@ func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *
 				return err
 			}
 		}
-		event, err = r.getEventWithQueryable(ctx, id, tx)
+		event, err = r.GetEventWithQueryable(ctx, id, tx)
 		if err != nil {
 			return err
 		}
