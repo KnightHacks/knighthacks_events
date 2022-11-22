@@ -3,6 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
+	"os"
+	"runtime/debug"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
@@ -14,11 +18,8 @@ import (
 	"github.com/KnightHacks/knighthacks_shared/pagination"
 	"github.com/KnightHacks/knighthacks_shared/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/vektah/gqlparser/v2/gqlerror"
-	"log"
-	"os"
-	"runtime/debug"
 )
 
 const defaultPort = "8080"
