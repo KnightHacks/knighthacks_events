@@ -4,16 +4,18 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/KnightHacks/knighthacks_events/graph/model"
-	"github.com/KnightHacks/knighthacks_events/repository"
-	shared_db_utils "github.com/KnightHacks/knighthacks_shared/database"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"log"
 	"os"
 	"reflect"
 	"testing"
 	"time"
+
+	"github.com/KnightHacks/knighthacks_events/graph/model"
+	"github.com/KnightHacks/knighthacks_events/repository"
+	"github.com/KnightHacks/knighthacks_shared/database"
+	shared_db_utils "github.com/KnightHacks/knighthacks_shared/database"
+	"github.com/KnightHacks/knighthacks_shared/utils"
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 var integrationTest = flag.Bool("integration", false, "whether to run integration tests")
@@ -53,8 +55,29 @@ func TestDatabaseRepository_CreateEvent(t *testing.T) {
 		input *model.NewEvent
 	}
 	tests := []Test[args, *model.Event]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "create Hackathon1",
+			args: args{
+				ctx: context.Background(),
+				input: &model.NewEvent{
+					Name:        "Hackathon1",
+					StartDate:   time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
+					EndDate:     time.Date(2000, time.February, 1, 1, 1, 1, 1, time.UTC),
+					Description: "Hackathon1 Description",
+					Location:    "UCF",
+					HackathonID: "42",
+				},
+			},
+			want: &model.Event{
+				Name:        "Hackathon1",
+				StartDate:   time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
+				EndDate:     time.Date(2000, time.February, 1, 1, 1, 1, 1, time.UTC),
+				Description: "Hackathon1 Description",
+				Location:    "UCF",
+			},
+			wantErr: false,
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -76,8 +99,25 @@ func TestDatabaseRepository_DeleteEvent(t *testing.T) {
 		id  string
 	}
 	tests := []Test[args, bool]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "delete Hackathon1",
+			args: args{
+				ctx: context.Background(),
+				id:  "42",
+			},
+			want:    true,
+			wantErr: false,
+		},
+		{
+			name: "delete fake event",
+			args: args{
+				ctx: context.Background(),
+				id:  "13579111315171921",
+			},
+			want:    false,
+			wantErr: true,
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -99,8 +139,22 @@ func TestDatabaseRepository_GetEvent(t *testing.T) {
 		id  string
 	}
 	tests := []Test[args, *model.Event]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "get event 1",
+			args: args{
+				ctx: context.Background(),
+				id:  "1",
+			},
+			want: &model.Event{
+				ID:          "1",
+				Name:        "event 1",
+				StartDate:   time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
+				EndDate:     time.Date(2000, time.February, 1, 1, 1, 1, 1, time.UTC),
+				Description: "event 1 description",
+				Location:    "event 1 location",
+			},
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -127,8 +181,60 @@ func TestDatabaseRepository_GetEvents(t *testing.T) {
 		total  int
 	}
 	tests := []Test[args, want]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "get 5 events",
+			args: args{
+				ctx:   context.Background(),
+				first: 5,   // what does this mean?
+				after: "2", // what does this mean?
+			},
+			want: want{
+				events: []*model.Event{
+					{
+						ID:          "2",
+						Name:        "event 2",
+						StartDate:   time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
+						EndDate:     time.Date(2000, time.February, 1, 1, 1, 1, 1, time.UTC),
+						Description: "event 2 description",
+						Location:    "event 2 location",
+					},
+					{
+						ID:          "3",
+						Name:        "event 3",
+						StartDate:   time.Date(2001, time.January, 1, 1, 1, 1, 1, time.UTC),
+						EndDate:     time.Date(2001, time.February, 1, 1, 1, 1, 1, time.UTC),
+						Description: "event 3 description",
+						Location:    "event 3 location",
+					},
+					{
+						ID:          "4",
+						Name:        "event 4",
+						StartDate:   time.Date(2002, time.January, 1, 1, 1, 1, 1, time.UTC),
+						EndDate:     time.Date(2002, time.February, 1, 1, 1, 1, 1, time.UTC),
+						Description: "event 4 description",
+						Location:    "event 4 location",
+					},
+					{
+						ID:          "5",
+						Name:        "event 5",
+						StartDate:   time.Date(2003, time.January, 1, 1, 1, 1, 1, time.UTC),
+						EndDate:     time.Date(2003, time.February, 1, 1, 1, 1, 1, time.UTC),
+						Description: "event 5 description",
+						Location:    "event 5 location",
+					},
+					{
+						ID:          "6",
+						Name:        "event 6",
+						StartDate:   time.Date(2004, time.January, 1, 1, 1, 1, 1, time.UTC),
+						EndDate:     time.Date(2004, time.February, 1, 1, 1, 1, 1, time.UTC),
+						Description: "event 6 description",
+						Location:    "event 6 location",
+					},
+				},
+				total: -1, // what does this mean?
+			},
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -152,11 +258,31 @@ func TestDatabaseRepository_UpdateDescription(t *testing.T) {
 		ctx         context.Context
 		id          string
 		description string
-		tx          pgx.Tx
+		tx          database.Queryable
 	}
+
 	tests := []Test[args, any]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "update event 1's description",
+			args: args{
+				ctx:         context.Background(),
+				id:          "1",
+				description: "1 updated",
+				tx:          databaseRepository.DatabasePool,
+			},
+			wantErr: false,
+		},
+		{
+			name: "update invalid",
+			args: args{
+				ctx:         context.Background(),
+				id:          "-1",
+				description: "update invalid description",
+				tx:          databaseRepository.DatabasePool,
+			},
+			wantErr: true,
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -172,11 +298,30 @@ func TestDatabaseRepository_UpdateEndDate(t *testing.T) {
 		ctx     context.Context
 		id      string
 		endDate time.Time
-		tx      pgx.Tx
+		tx      database.Queryable
 	}
 	tests := []Test[args, any]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "update event 1's end date",
+			args: args{
+				ctx:     context.Background(),
+				id:      "1",
+				endDate: time.Date(2000, time.November, 1, 1, 1, 1, 1, time.UTC),
+				tx:      databaseRepository.DatabasePool,
+			},
+			wantErr: false,
+		},
+		{
+			name: "update invalid event end date",
+			args: args{
+				ctx:     context.Background(),
+				id:      "-1",
+				endDate: time.Date(2000, time.November, 1, 1, 1, 1, 1, time.UTC),
+				tx:      databaseRepository.DatabasePool,
+			},
+			wantErr: true,
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -194,8 +339,46 @@ func TestDatabaseRepository_UpdateEvent(t *testing.T) {
 		input *model.UpdatedEvent
 	}
 	tests := []Test[args, *model.Event]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "update event 2",
+			args: args{
+				ctx: context.Background(),
+				id:  "2",
+				input: &model.UpdatedEvent{
+					Name:        utils.Ptr("event 2022"),
+					StartDate:   utils.Ptr(time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC)),
+					EndDate:     utils.Ptr(time.Date(2000, time.February, 1, 1, 1, 1, 1, time.UTC)),
+					Description: utils.Ptr("event 2 updated to be event 2022"),
+					Location:    utils.Ptr("UCF"),
+				},
+			},
+			want: &model.Event{
+				ID:          "2",
+				Name:        "event 2022",
+				StartDate:   time.Date(2000, time.January, 1, 1, 1, 1, 1, time.UTC),
+				EndDate:     time.Date(2000, time.February, 1, 1, 1, 1, 1, time.UTC),
+				Description: "event 2 updated to be event 2022",
+				Location:    "UCF",
+			},
+			wantErr: false,
+		},
+		{
+			name: "update invalid",
+			args: args{
+				ctx: context.Background(),
+				id:  "-2",
+				input: &model.UpdatedEvent{
+					Name:        utils.Ptr("abcdefg"),
+					StartDate:   utils.Ptr(time.Date(2000, time.April, 1, 1, 1, 1, 1, time.UTC)),
+					EndDate:     utils.Ptr(time.Date(2000, time.May, 1, 1, 1, 1, 1, time.UTC)),
+					Description: utils.Ptr("update failed description"),
+					Location:    utils.Ptr("UCF"),
+				},
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -217,11 +400,30 @@ func TestDatabaseRepository_UpdateEventName(t *testing.T) {
 		ctx       context.Context
 		id        string
 		eventName string
-		tx        pgx.Tx
+		tx        database.Queryable
 	}
 	tests := []Test[args, any]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "update event 5 to event 5000",
+			args: args{
+				ctx:       context.Background(),
+				id:        "5",
+				eventName: "5000",
+				tx:        databaseRepository.DatabasePool,
+			},
+			wantErr: false,
+		},
+		{
+			name: "update invalid event 6",
+			args: args{
+				ctx:       context.Background(),
+				id:        "-6",
+				eventName: "6000",
+				tx:        databaseRepository.DatabasePool,
+			},
+			wantErr: true,
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -238,11 +440,20 @@ func TestDatabaseRepository_UpdateLocation(t *testing.T) {
 		ctx      context.Context
 		id       string
 		location string
-		tx       pgx.Tx
+		tx       database.Queryable
 	}
 	tests := []Test[args, any]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "update location of event 1",
+			args: args{
+				ctx:      context.Background(),
+				id:       "1",
+				location: "Hawaii",
+				tx:       databaseRepository.DatabasePool,
+			},
+			wantErr: false,
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -259,11 +470,20 @@ func TestDatabaseRepository_UpdateStartDate(t *testing.T) {
 		ctx       context.Context
 		id        string
 		startDate time.Time
-		tx        pgx.Tx
+		tx        database.Queryable
 	}
 	tests := []Test[args, any]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "update event 1 start date",
+			args: args{
+				ctx:       context.Background(),
+				id:        "1",
+				startDate: time.Date(2001, time.January, 1, 1, 1, 1, 1, time.UTC),
+				tx:        databaseRepository.DatabasePool,
+			},
+			wantErr: false,
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -279,11 +499,37 @@ func TestDatabaseRepository_getEventWithQueryable(t *testing.T) {
 	type args struct {
 		ctx       context.Context
 		id        string
-		queryable shared_db_utils.Queryable
+		queryable database.Queryable
 	}
 	tests := []Test[args, *model.Event]{
-		{},
-		// TODO: Add test cases.
+		{
+			name: "query for event 1",
+			args: args{
+				ctx:       context.Background(),
+				id:        "1",
+				queryable: databaseRepository.DatabasePool,
+			},
+			want: &model.Event{
+				ID:          "1",
+				Name:        "event 1",
+				StartDate:   time.Date(2001, time.January, 1, 1, 1, 1, 1, time.UTC),
+				EndDate:     time.Date(2001, time.February, 1, 1, 1, 1, 1, time.UTC),
+				Description: "event 1 description",
+				Location:    "event 1 location",
+			},
+			wantErr: false,
+		},
+		{
+			name: "query invalid ID: -1",
+			args: args{
+				ctx:       context.Background(),
+				id:        "-1",
+				queryable: databaseRepository.DatabasePool,
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -309,7 +555,16 @@ func TestNewDatabaseRepository(t *testing.T) {
 		args args
 		want *repository.DatabaseRepository
 	}{
-		// TODO: Add test cases.
+		{
+			name: "default",
+			args: args{
+				databasePool: databaseRepository.DatabasePool,
+			},
+			want: &repository.DatabaseRepository{
+				DatabasePool: databaseRepository.DatabasePool,
+			},
+		},
+		// TODO: review
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
