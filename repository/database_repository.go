@@ -3,12 +3,12 @@ package repository
 import (
 	"context"
 	"errors"
-	"strconv"
-	"time"
-	"github.com/KnightHacks/knighthacks_shared/database"
 	"github.com/KnightHacks/knighthacks_events/graph/model"
+	"github.com/KnightHacks/knighthacks_shared/database"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"strconv"
+	"time"
 )
 
 var (
@@ -89,10 +89,10 @@ func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, 
 }
 
 func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Event, error) {
-	return r.getEventWithQueryable(ctx, id, r.DatabasePool)
+	return r.GetEventWithQueryable(ctx, id, r.DatabasePool)
 }
 
-func (r *DatabaseRepository) getEventWithQueryable(ctx context.Context, id string, queryable database.Queryable) (*model.Event, error) {
+func (r *DatabaseRepository) GetEventWithQueryable(ctx context.Context, id string, queryable database.Queryable) (*model.Event, error) {
 	var event model.Event
 	err := queryable.QueryRow(ctx, "SELECT id, location, start_date, end_date, name, description FROM events WHERE id = $1", id).Scan(&event.ID, &event.Location,
 		&event.StartDate, &event.EndDate, &event.Name, &event.Description)
@@ -145,7 +145,7 @@ func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *
 				return err
 			}
 		}
-		event, err = r.getEventWithQueryable(ctx, id, tx)
+		event, err = r.GetEventWithQueryable(ctx, id, tx)
 		if err != nil {
 			return err
 		}
@@ -157,7 +157,7 @@ func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *
 	return event, nil
 }
 
-func (r *DatabaseRepository) UpdateEventName(ctx context.Context, id string, eventName string, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateEventName(ctx context.Context, id string, eventName string, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET name = $1 WHERE id = $2", eventName, id)
 	if err != nil {
 		return err
@@ -168,7 +168,7 @@ func (r *DatabaseRepository) UpdateEventName(ctx context.Context, id string, eve
 	return nil
 }
 
-func (r *DatabaseRepository) UpdateStartDate(ctx context.Context, id string, startDate time.Time, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateStartDate(ctx context.Context, id string, startDate time.Time, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET start_date = $1 WHERE id = $2", startDate, id)
 	if err != nil {
 		return err
@@ -179,7 +179,7 @@ func (r *DatabaseRepository) UpdateStartDate(ctx context.Context, id string, sta
 	return nil
 }
 
-func (r *DatabaseRepository) UpdateEndDate(ctx context.Context, id string, endDate time.Time, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateEndDate(ctx context.Context, id string, endDate time.Time, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET end_date = $1 WHERE id = $2", endDate, id)
 	if err != nil {
 		return err
@@ -189,7 +189,7 @@ func (r *DatabaseRepository) UpdateEndDate(ctx context.Context, id string, endDa
 	}
 	return nil
 }
-func (r *DatabaseRepository) UpdateDescription(ctx context.Context, id string, description string, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateDescription(ctx context.Context, id string, description string, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET description = $1 WHERE id = $2", description, id)
 	if err != nil {
 		return err
@@ -199,7 +199,7 @@ func (r *DatabaseRepository) UpdateDescription(ctx context.Context, id string, d
 	}
 	return nil
 }
-func (r *DatabaseRepository) UpdateLocation(ctx context.Context, id string, location string, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateLocation(ctx context.Context, id string, location string, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET location = $1 WHERE id = $2", location, id)
 	if err != nil {
 		return err
