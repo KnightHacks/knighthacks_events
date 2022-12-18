@@ -64,6 +64,7 @@ input NewEvent {
   end_date: Time!
   description: String!
   location: String!
+  hackathonId: ID!
 }
 
 input UpdatedEvent {

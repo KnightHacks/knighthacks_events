@@ -3,16 +3,17 @@ package repository
 import (
 	"context"
 	"errors"
-	"github.com/KnightHacks/knighthacks_shared/database"
-	"time"
-
 	"github.com/KnightHacks/knighthacks_events/graph/model"
-	"github.com/jackc/pgx/v4"
-	"github.com/jackc/pgx/v4/pgxpool"
+	"github.com/KnightHacks/knighthacks_shared/database"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"strconv"
+	"time"
 )
 
 var (
-	EventNotFound = errors.New("event was not found")
+	EventAlreadyExists = errors.New("event with id already exists")
+	EventNotFound      = errors.New("event was not found")
 )
 
 // DatabaseRepository
@@ -27,9 +28,46 @@ func NewDatabaseRepository(databasePool *pgxpool.Pool) *DatabaseRepository {
 	}
 }
 
+/*
+create table events
+(
+
+	id           serial,
+	hackathon_id integer   not null,
+	location     varchar   not null,
+	start_date   timestamp not null,
+	end_date     timestamp not null,
+	name         varchar   not null,
+	description  varchar   not null,
+	constraint events_pk
+	    primary key (id),
+	constraint events_hackathons_id_fk
+	    foreign key (hackathon_id) references hackathons
+
+);
+*/
 func (r *DatabaseRepository) CreateEvent(ctx context.Context, input *model.NewEvent) (*model.Event, error) {
-	//TODO: implement me
-	panic("implement me")
+	var eventIdInt int
+	err := r.DatabasePool.QueryRow(ctx, "INSERT INTO events (hackathon_id, location, start_date, end_date, name, description) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
+		input.HackathonID,
+		input.Location,
+		input.StartDate,
+		input.EndDate,
+		input.Name,
+		input.Description,
+	).Scan(&eventIdInt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &model.Event{
+		ID:          strconv.Itoa(eventIdInt),
+		Location:    input.Location,
+		StartDate:   input.StartDate,
+		EndDate:     input.EndDate,
+		Name:        input.Name,
+		Description: input.Description,
+	}, nil
 }
 
 func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, error) {
@@ -51,10 +89,10 @@ func (r *DatabaseRepository) DeleteEvent(ctx context.Context, id string) (bool, 
 }
 
 func (r *DatabaseRepository) GetEvent(ctx context.Context, id string) (*model.Event, error) {
-	return r.getEventWithQueryable(ctx, id, r.DatabasePool)
+	return r.GetEventWithQueryable(ctx, id, r.DatabasePool)
 }
 
-func (r *DatabaseRepository) getEventWithQueryable(ctx context.Context, id string, queryable database.Queryable) (*model.Event, error) {
+func (r *DatabaseRepository) GetEventWithQueryable(ctx context.Context, id string, queryable database.Queryable) (*model.Event, error) {
 	var event model.Event
 	err := queryable.QueryRow(ctx, "SELECT id, location, start_date, end_date, name, description FROM events WHERE id = $1", id).Scan(&event.ID, &event.Location,
 		&event.StartDate, &event.EndDate, &event.Name, &event.Description)
@@ -76,7 +114,7 @@ func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *
 	}
 	var event *model.Event
 	var err error
-	err = r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
+	err = pgx.BeginTxFunc(ctx, r.DatabasePool, pgx.TxOptions{}, func(tx pgx.Tx) error {
 		if input.Name != nil {
 			err = r.UpdateEventName(ctx, id, *input.Name, tx)
 			if err != nil {
@@ -107,7 +145,7 @@ func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *
 				return err
 			}
 		}
-		event, err = r.getEventWithQueryable(ctx, id, tx)
+		event, err = r.GetEventWithQueryable(ctx, id, tx)
 		if err != nil {
 			return err
 		}
@@ -119,7 +157,7 @@ func (r *DatabaseRepository) UpdateEvent(ctx context.Context, id string, input *
 	return event, nil
 }
 
-func (r *DatabaseRepository) UpdateEventName(ctx context.Context, id string, eventName string, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateEventName(ctx context.Context, id string, eventName string, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET name = $1 WHERE id = $2", eventName, id)
 	if err != nil {
 		return err
@@ -130,7 +168,7 @@ func (r *DatabaseRepository) UpdateEventName(ctx context.Context, id string, eve
 	return nil
 }
 
-func (r *DatabaseRepository) UpdateStartDate(ctx context.Context, id string, startDate time.Time, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateStartDate(ctx context.Context, id string, startDate time.Time, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET start_date = $1 WHERE id = $2", startDate, id)
 	if err != nil {
 		return err
@@ -141,7 +179,7 @@ func (r *DatabaseRepository) UpdateStartDate(ctx context.Context, id string, sta
 	return nil
 }
 
-func (r *DatabaseRepository) UpdateEndDate(ctx context.Context, id string, endDate time.Time, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateEndDate(ctx context.Context, id string, endDate time.Time, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET end_date = $1 WHERE id = $2", endDate, id)
 	if err != nil {
 		return err
@@ -151,7 +189,7 @@ func (r *DatabaseRepository) UpdateEndDate(ctx context.Context, id string, endDa
 	}
 	return nil
 }
-func (r *DatabaseRepository) UpdateDescription(ctx context.Context, id string, description string, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateDescription(ctx context.Context, id string, description string, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET description = $1 WHERE id = $2", description, id)
 	if err != nil {
 		return err
@@ -161,7 +199,7 @@ func (r *DatabaseRepository) UpdateDescription(ctx context.Context, id string, d
 	}
 	return nil
 }
-func (r *DatabaseRepository) UpdateLocation(ctx context.Context, id string, location string, tx pgx.Tx) error {
+func (r *DatabaseRepository) UpdateLocation(ctx context.Context, id string, location string, tx database.Queryable) error {
 	commandTag, err := tx.Exec(ctx, "UPDATE events SET location = $1 WHERE id = $2", location, id)
 	if err != nil {
 		return err
@@ -175,7 +213,7 @@ func (r *DatabaseRepository) UpdateLocation(ctx context.Context, id string, loca
 func (r *DatabaseRepository) GetEvents(ctx context.Context, first int, after string) ([]*model.Event, int, error) {
 	events := make([]*model.Event, 0, first)
 	var total int
-	err := r.DatabasePool.BeginTxFunc(ctx, pgx.TxOptions{}, func(tx pgx.Tx) error {
+	err := pgx.BeginTxFunc(ctx, r.DatabasePool, pgx.TxOptions{}, func(tx pgx.Tx) error {
 		rows, err := r.DatabasePool.Query(ctx, "SELECT id, location, start_date, end_date, name, description FROM events WHERE id > $1 ORDER BY `id` DESC LIMIT $2", after, first)
 		if err != nil {
 			return err
