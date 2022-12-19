@@ -5,28 +5,24 @@ package graph
 
 import (
 	"context"
-	"github.com/KnightHacks/knighthacks_shared/pagination"
 
 	"github.com/KnightHacks/knighthacks_events/graph/generated"
 	"github.com/KnightHacks/knighthacks_events/graph/model"
+	"github.com/KnightHacks/knighthacks_shared/pagination"
 )
 
-// CreateEvent is the resolver for the createEvent field.
 func (r *mutationResolver) CreateEvent(ctx context.Context, input model.NewEvent) (*model.Event, error) {
 	return r.Repository.CreateEvent(ctx, &input)
 }
 
-// UpdateEvent is the resolver for the updateEvent field.
 func (r *mutationResolver) UpdateEvent(ctx context.Context, id string, input model.UpdatedEvent) (*model.Event, error) {
 	return r.Repository.UpdateEvent(ctx, id, &input)
 }
 
-// DeleteEvent is the resolver for the deleteEvent field.
 func (r *mutationResolver) DeleteEvent(ctx context.Context, id string) (bool, error) {
 	return r.Repository.DeleteEvent(ctx, id)
 }
 
-// Events is the resolver for the events field.
 func (r *queryResolver) Events(ctx context.Context, first int, after *string) (*model.EventsConnection, error) {
 	a, err := pagination.DecodeCursor(after)
 	if err != nil {

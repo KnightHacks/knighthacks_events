@@ -437,7 +437,7 @@ type Mutation {
 	{Name: "../../federation/directives.graphql", Input: `
 	scalar _Any
 	scalar _FieldSet
-
+	
 	directive @external on FIELD_DEFINITION
 	directive @requires(fields: _FieldSet!) on FIELD_DEFINITION
 	directive @provides(fields: _FieldSet!) on FIELD_DEFINITION
@@ -3616,12 +3616,7 @@ func (ec *executionContext) unmarshalInputNewEvent(ctx context.Context, obj inte
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "start_date", "end_date", "description", "location", "hackathonId"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
+	for k, v := range asMap {
 		switch k {
 		case "name":
 			var err error
@@ -3684,12 +3679,7 @@ func (ec *executionContext) unmarshalInputUpdatedEvent(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "start_date", "end_date", "description", "location"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
+	for k, v := range asMap {
 		switch k {
 		case "name":
 			var err error
