@@ -228,7 +228,7 @@ func (r *DatabaseRepository) GetEvents(ctx context.Context, first int, after str
 			events = append(events, &event)
 		}
 
-		return r.DatabasePool.QueryRow(ctx, "SELECT COUNT(*) FROM events").Scan(&total)
+		return tx.QueryRow(ctx, "SELECT COUNT(*) FROM events").Scan(&total)
 	})
 
 	if err != nil {
