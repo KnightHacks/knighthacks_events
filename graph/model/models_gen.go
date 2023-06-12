@@ -10,6 +10,8 @@ import (
 
 type Connection interface {
 	IsConnection()
+	GetTotalCount() *int
+	GetPageInfo() *models.PageInfo
 }
 
 type Event struct {
@@ -29,7 +31,9 @@ type EventsConnection struct {
 	Events     []*Event         `json:"events"`
 }
 
-func (EventsConnection) IsConnection() {}
+func (EventsConnection) IsConnection()                      {}
+func (this EventsConnection) GetTotalCount() *int           { return &this.TotalCount }
+func (this EventsConnection) GetPageInfo() *models.PageInfo { return this.PageInfo }
 
 type NewEvent struct {
 	Name        string    `json:"name"`
@@ -41,9 +45,9 @@ type NewEvent struct {
 }
 
 type UpdatedEvent struct {
-	Name        *string    `json:"name"`
-	StartDate   *time.Time `json:"start_date"`
-	EndDate     *time.Time `json:"end_date"`
-	Description *string    `json:"description"`
-	Location    *string    `json:"location"`
+	Name        *string    `json:"name,omitempty"`
+	StartDate   *time.Time `json:"start_date,omitempty"`
+	EndDate     *time.Time `json:"end_date,omitempty"`
+	Description *string    `json:"description,omitempty"`
+	Location    *string    `json:"location,omitempty"`
 }
