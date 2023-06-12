@@ -35,7 +35,7 @@ func (r *queryResolver) Events(ctx context.Context, first int, after *string) (*
 
 	return &model.EventsConnection{
 		TotalCount: total,
-		PageInfo:   pagination.GetPageInfo(events[0].ID, events[len(events)-1].ID),
+		PageInfo:   pagination.GetPageInfo(events),
 		Events:     events,
 	}, nil
 }
