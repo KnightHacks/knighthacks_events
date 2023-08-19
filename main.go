@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"os"
 	"runtime/debug"
@@ -67,14 +66,9 @@ func graphqlHandler(a *auth.Auth, pool *pgxpool.Pool) gin.HandlerFunc {
 		},
 	}
 	srv := handler.NewDefaultServer(generated.NewExecutableSchema(config))
-	srv.SetRecoverFunc(func(ctx context.Context, iErr interface{}) error {
-		err := fmt.Errorf("%v", iErr)
-		log.Println(fmt.Sprintf("runtime error: %v\n", err))
-		debug.PrintStack()
-		return gqlerror.Errorf("Internal server error! Check logs for more details!")
-	})
 	srv.SetErrorPresenter(func(ctx context.Context, err error) *gqlerror.Error {
 		log.Println("Error presented: ", err)
+		debug.PrintStack()
 		return graphql.DefaultErrorPresenter(ctx, err)
 	})
 	return func(c *gin.Context) {
